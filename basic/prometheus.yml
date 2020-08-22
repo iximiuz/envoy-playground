@@ -1,0 +1,13 @@
+scrape_configs:
+  - job_name: 'backend'
+    scrape_interval: 1s
+
+    static_configs:
+      - targets: ['localhost:18088']
+
+  - job_name: 'frontend'
+    scrape_interval: 1s
+
+    static_configs:
+      - targets: ['localhost:28088']
+
