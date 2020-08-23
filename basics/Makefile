@@ -1,7 +1,7 @@
 PROJECT = com.iximiuz.projects.envoy-playground-basics
 EXPOSE_FRONTEND = 8080
 EXPOSE_METRICS = 9090
-BACKEND_ERROR_RATE=30
+BACKEND_ERROR_RATE=20
 
 pod_infra_container_id = $(shell podman pod inspect -f "{{.InfraContainerID}}" $(1))
 pod_ip_address = $(shell podman inspect -f "{{.NetworkSettings.IPAddress}}" $(call pod_infra_container_id,$(1)))
@@ -15,6 +15,10 @@ run: backend-pod-create backend-svc-build backend-svc-run \
 	frontend-pod-create frontend-svc-build frontend-svc-run \
 	prometheus-build prometheus-run
 
+
+.PHONY: test
+test:
+	for _ in {1..1000}; do curl --silent localhost:${EXPOSE_FRONTEND}; done | sort | uniq -w 8 -c
 
 .PHONY: backend-pod-create
 backend-pod-create:
