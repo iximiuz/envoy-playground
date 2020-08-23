@@ -1,4 +1,4 @@
-module github.com/iximiuz/envoy-journey/basics
+module github.com/iximiuz/envoy-playground/basics
 
 go 1.15
 

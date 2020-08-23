@@ -1,0 +1,11 @@
+scrape_configs:
+  - job_name: 'frontend'
+    scrape_interval: 1s
+    static_configs:
+      - targets: ['frontend.service:8081']
+
+  - job_name: 'backend'
+    scrape_interval: 1s
+    static_configs:
+      - targets: ['backend.service:8081']
+
