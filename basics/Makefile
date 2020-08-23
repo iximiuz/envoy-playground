@@ -1,6 +1,7 @@
 PROJECT = com.iximiuz.projects.envoy-playground-basics
 EXPOSE_FRONTEND = 8080
 EXPOSE_METRICS = 9090
+BACKEND_ERROR_RATE=30
 
 pod_infra_container_id = $(shell podman pod inspect -f "{{.InfraContainerID}}" $(1))
 pod_ip_address = $(shell podman inspect -f "{{.NetworkSettings.IPAddress}}" $(call pod_infra_container_id,$(1)))
@@ -31,6 +32,7 @@ backend-svc-build: backend-svc/Dockerfile
 backend-svc-run:
 	@echo "${tgreen}>> starting backend service${treset}"
 	@podman run -d --rm --pod backend-pod \
+		-e ERROR_RATE=${BACKEND_ERROR_RATE} \
 		--label ${PROJECT} ${PROJECT}/backend-svc
 
 
@@ -60,6 +62,7 @@ frontend-svc-run:
 prometheus-build: prometheus/Dockerfile
 	@echo "${tgreen}>> building prometheus image${treset}"
 	@podman build -t ${PROJECT}/prometheus -f prometheus/Dockerfile
+
 
 .PHONY: prometheus-run
 prometheus-run:

@@ -13,7 +13,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var FAIL_PCT int
+var ERROR_RATE int
 
 var (
 	requestCounter = prometheus.NewCounterVec(
@@ -27,7 +27,7 @@ var (
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	ts := time.Now().Format(time.RFC850)
-	if rand.Intn(100) >= FAIL_PCT {
+	if rand.Intn(100) >= ERROR_RATE {
 		fmt.Fprintln(w, "Greetings from backend! Time is", ts)
 		requestCounter.WithLabelValues("2xx").Inc()
 	} else {
@@ -38,11 +38,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	n, err := strconv.Atoi(os.Getenv("FAIL_PCT"))
+	n, err := strconv.Atoi(os.Getenv("ERROR_RATE"))
 	if err != nil {
-		log.Fatal("Can not parse FAIL_PCT env")
+		log.Fatal("Can not parse ERROR_RATE env")
 	}
-	FAIL_PCT = n
+	ERROR_RATE = n
 
 	prometheus.MustRegister(requestCounter)
 	http.Handle("/metrics", promhttp.Handler())
