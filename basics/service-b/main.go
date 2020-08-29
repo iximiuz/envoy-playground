@@ -26,7 +26,7 @@ var (
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	if rand.Intn(100) >= ERROR_RATE {
-		fmt.Fprintln(w, "Service B: Yay! nounce ", rand.Uint32())
+		fmt.Fprintln(w, "Service B: Yay! nounce", rand.Uint32())
 		requestCounter.WithLabelValues("2xx").Inc()
 	} else {
 		http.Error(w, fmt.Sprintf("Service B: Ooops... nounce %v", rand.Uint32()),
@@ -44,8 +44,8 @@ func main() {
 
 	prometheus.MustRegister(requestCounter)
 	http.Handle("/metrics", promhttp.Handler())
-	go http.ListenAndServe(":"+os.Getenv("PORT_METRICS"), nil)
+	go http.ListenAndServe(":"+os.Getenv("METRICS_PORT"), nil)
 
 	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT_API"), nil))
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("SERVICE_PORT"), nil))
 }

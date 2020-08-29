@@ -9,14 +9,16 @@ COPY go.mod .
 COPY main.go .
 
 RUN go mod download
-RUN go build -o service-b
+RUN go build -o service-a
 
 # Run
-ENV ERROR_RATE=30
-
+ENV SERVICE_HOST="0.0.0.0"
 ENV SERVICE_PORT=80
 
+ENV METRICS_HOST="0.0.0.0"
 ENV METRICS_PORT=8081
 
-CMD ["/app/service-b"]
+ENV UPSTREAM_SERVICE="http://b.service/"
+
+CMD ["/app/service-a"]
 

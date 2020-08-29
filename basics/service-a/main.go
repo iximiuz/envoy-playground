@@ -19,8 +19,6 @@ var requestCounter = prometheus.NewCounterVec(
 	[]string{"status"},
 )
 
-var UPSTREAM_URL = "http://b.service"
-
 func httpGet(url string) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -41,7 +39,7 @@ func httpGet(url string) (string, error) {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	resp, err := httpGet(UPSTREAM_URL)
+	resp, err := httpGet(os.Getenv("UPSTREAM_SERVICE"))
 	if err == nil {
 		fmt.Fprintln(w, "Service A: upstream responded with:", resp)
 		requestCounter.WithLabelValues("2xx").Inc()
@@ -55,8 +53,10 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	prometheus.MustRegister(requestCounter)
 	http.Handle("/metrics", promhttp.Handler())
-	go http.ListenAndServe(":"+os.Getenv("PORT_METRICS"), nil)
+	go http.ListenAndServe(
+		os.Getenv("METRICS_HOST")+":"+os.Getenv("METRICS_PORT"), nil)
 
 	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT_API"), nil))
+	log.Fatal(http.ListenAndServe(
+		os.Getenv("SERVICE_HOST")+":"+os.Getenv("SERVICE_PORT"), nil))
 }
