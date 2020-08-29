@@ -1,4 +1,4 @@
-module github.com/iximiuz/envoy-playground/basics
+module github.com/iximiuz/envoy-playground/basics/service-a
 
 go 1.15
 

@@ -1,6 +1,6 @@
 *.swp
 .vagrant
-basics/backend-svc/basics
-basics/backend-svc/go.sum
-basics/frontend-svc/basics
-basics/frontend-svc/go.sum
+basics/service-a/service-a
+basics/service-a/go.sum
+basics/service-b/service-b
+basics/service-b/go.sum

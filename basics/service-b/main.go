@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -18,20 +17,19 @@ var ERROR_RATE int
 var (
 	requestCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "backend_requests_total",
-			Help: "The total number of requests received by the backend service",
+			Name: "service_b_requests_total",
+			Help: "The total number of requests received by Service B.",
 		},
 		[]string{"status"},
 	)
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	ts := time.Now().Format(time.RFC850)
 	if rand.Intn(100) >= ERROR_RATE {
-		fmt.Fprintln(w, "Greetings from backend! Time is", ts)
+		fmt.Fprintln(w, "Service B: Yay! nounce ", rand.Uint32())
 		requestCounter.WithLabelValues("2xx").Inc()
 	} else {
-		http.Error(w, fmt.Sprintf("Ooops... Random error. Time is %v", ts),
+		http.Error(w, fmt.Sprintf("Service B: Ooops... nounce %v", rand.Uint32()),
 			http.StatusInternalServerError)
 		requestCounter.WithLabelValues("5xx").Inc()
 	}

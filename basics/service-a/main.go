@@ -13,13 +13,13 @@ import (
 
 var requestCounter = prometheus.NewCounterVec(
 	prometheus.CounterOpts{
-		Name: "frontend_requests_total",
-		Help: "The total number of requests received by the frontend service",
+		Name: "service_a_requests_total",
+		Help: "The total number of requests received by Service A.",
 	},
 	[]string{"status"},
 )
 
-var BACKEND_URL = "http://backend.service"
+var UPSTREAM_URL = "http://b.service"
 
 func httpGet(url string) (string, error) {
 	resp, err := http.Get(url)
@@ -41,12 +41,12 @@ func httpGet(url string) (string, error) {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	resp, err := httpGet(BACKEND_URL)
+	resp, err := httpGet(UPSTREAM_URL)
 	if err == nil {
-		fmt.Fprintln(w, "Greetings from frontend! Backend says:", resp)
+		fmt.Fprintln(w, "Service A: upstream responded with:", resp)
 		requestCounter.WithLabelValues("2xx").Inc()
 	} else {
-		http.Error(w, fmt.Sprintf("Ooops, backend request failed with error: %v", err.Error()),
+		http.Error(w, fmt.Sprintf("Service A: upstream failed with: %v", err.Error()),
 			http.StatusInternalServerError)
 		requestCounter.WithLabelValues("5xx").Inc()
 	}

@@ -1,11 +1,11 @@
 scrape_configs:
-  - job_name: 'frontend'
+  - job_name: service-a
     scrape_interval: 1s
     static_configs:
-      - targets: ['frontend.service:8081']
+      - targets: ['a.service:8081']
 
-  - job_name: 'backend'
+  - job_name: service-b
     scrape_interval: 1s
     static_configs:
-      - targets: ['backend.service:8081']
+      - targets: ['b.service:8081']
 

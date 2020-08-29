@@ -1,7 +1,7 @@
 PROJECT = com.iximiuz.projects.envoy-playground-basics
-EXPOSE_FRONTEND = 8080
-EXPOSE_METRICS = 9090
-BACKEND_ERROR_RATE=20
+EXPOSE_SERVICE_A = 8080
+EXPOSE_PROMETHEUS = 9090
+SERVICE_B_ERROR_RATE=20
 
 pod_infra_container_id = $(shell podman pod inspect -f "{{.InfraContainerID}}" $(1))
 pod_ip_address = $(shell podman inspect -f "{{.NetworkSettings.IPAddress}}" $(call pod_infra_container_id,$(1)))
@@ -11,55 +11,56 @@ treset := $(shell tput sgr0)
 
 
 .PHONY: run
-run: backend-pod-create backend-svc-build backend-svc-run \
-	frontend-pod-create frontend-svc-build frontend-svc-run \
+run: service-b-pod-create service-b-build service-b-run \
+	service-a-pod-create service-a-build service-a-run \
 	prometheus-build prometheus-run
 
 
 .PHONY: test
 test:
-	for _ in {1..1000}; do curl --silent localhost:${EXPOSE_FRONTEND}; done | sort | uniq -w 8 -c
-
-.PHONY: backend-pod-create
-backend-pod-create:
-	@echo "${tgreen}>> creating backend pod${treset}"
-	@podman pod create --name backend-pod --label ${PROJECT}
+	for _ in {1..1000}; do curl --silent localhost:${EXPOSE_SERVICE_A}; done | sort | uniq -w 8 -c
 
 
-.PHONY: backend-svc-build
-backend-svc-build: backend-svc/Dockerfile
-	@echo "${tgreen}>> building backend service image${treset}"
-	@podman build -t ${PROJECT}/backend-svc -f backend-svc/Dockerfile
-
-
-.PHONY: backend-svc-run
-backend-svc-run:
-	@echo "${tgreen}>> starting backend service${treset}"
-	@podman run -d --rm --pod backend-pod \
-		-e ERROR_RATE=${BACKEND_ERROR_RATE} \
-		--label ${PROJECT} ${PROJECT}/backend-svc
-
-
-.PHONY: frontend-pod-create
-frontend-pod-create:
-	@echo "${tgreen}>> creating frontend pod${treset}"
-	@podman pod create --name frontend-pod \
+.PHONY: service-a-pod-create
+service-a-pod-create:
+	@echo "${tgreen}>> creating Service A pod${treset}"
+	@podman pod create --name service-a-pod \
 	   	--label ${PROJECT} \
-		--add-host backend.service:$(call pod_ip_address,backend-pod) \
-		--publish ${EXPOSE_FRONTEND}:80
+		--add-host b.service:$(call pod_ip_address,service-b-pod) \
+		--publish ${EXPOSE_SERVICE_A}:80
 
 
-.PHONY: frontend-svc-build
-frontend-svc-build: frontend-svc/Dockerfile
-	@echo "${tgreen}>> building frontend service image${treset}"
-	@podman build -t ${PROJECT}/frontend-svc -f frontend-svc/Dockerfile
+.PHONY: service-a-build
+service-a-build: service-a/Dockerfile
+	@echo "${tgreen}>> building Service A image${treset}"
+	@podman build -t ${PROJECT}/service-a -f service-a/Dockerfile
 
 
-.PHONY: frontend-svc-run
-frontend-svc-run:
-	@echo "${tgreen}>> starting frontend service${treset}"
-	@podman run -d --rm --pod frontend-pod \
-		--label ${PROJECT} ${PROJECT}/frontend-svc
+.PHONY: service-a-run
+service-a-run:
+	@echo "${tgreen}>> starting Service A${treset}"
+	@podman run -d --rm --pod service-a-pod \
+		--label ${PROJECT} ${PROJECT}/service-a
+
+
+.PHONY: service-b-pod-create
+service-b-pod-create:
+	@echo "${tgreen}>> creating Service B pod${treset}"
+	@podman pod create --name service-b-pod --label ${PROJECT}
+
+
+.PHONY: service-b-build
+service-b-build: service-b/Dockerfile
+	@echo "${tgreen}>> building Service B image${treset}"
+	@podman build -t ${PROJECT}/service-b -f service-b/Dockerfile
+
+
+.PHONY: service-b-run
+service-b-run:
+	@echo "${tgreen}>> starting Service B${treset}"
+	@podman run -d --rm --pod service-b-pod \
+		-e ERROR_RATE=${SERVICE_B_ERROR_RATE} \
+		--label ${PROJECT} ${PROJECT}/service-b
 
 
 .PHONY: prometheus-build
@@ -73,9 +74,9 @@ prometheus-run:
 	@echo "${tgreen}>> starting prometheus service${treset}"
 	@podman run -d \
 	   	--label ${PROJECT} \
-		--publish ${EXPOSE_METRICS}:9090 \
-		--add-host frontend.service:$(call pod_ip_address,frontend-pod) \
-		--add-host backend.service:$(call pod_ip_address,backend-pod) \
+		--publish ${EXPOSE_PROMETHEUS}:9090 \
+		--add-host a.service:$(call pod_ip_address,service-a-pod) \
+		--add-host b.service:$(call pod_ip_address,service-b-pod) \
 		${PROJECT}/prometheus
 
 
