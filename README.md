@@ -1,4 +1,4 @@
-# envoy-playground
+# Envoy Playground
 
 Container-based playground showing various capabilities of service proxy pattern.
 
