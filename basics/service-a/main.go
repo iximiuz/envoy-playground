@@ -43,10 +43,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		fmt.Fprintln(w, "Service A: upstream responded with:", resp)
 		requestCounter.WithLabelValues("2xx").Inc()
+		log.Println("HTTP 200", r.Method, r.URL, r.RemoteAddr)
 	} else {
 		http.Error(w, fmt.Sprintf("Service A: upstream failed with: %v", err.Error()),
 			http.StatusInternalServerError)
 		requestCounter.WithLabelValues("5xx").Inc()
+		log.Println("HTTP 500", r.Method, r.URL, r.RemoteAddr)
 	}
 }
 

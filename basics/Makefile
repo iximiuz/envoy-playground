@@ -31,6 +31,21 @@ traffic:
 	for _ in {1..1000}; do curl --silent localhost:${EXPOSE_SERVICE_A}; done | sort | uniq -w 24 -c
 
 
+.PHONY: log-service-a
+log-service-a:
+	@podman logs -f service-a
+
+
+.PHONY: log-service-a-envoy
+log-service-a-envoy:
+	@podman logs -f service-a-envoy
+
+
+.PHONY: log-service-b
+log-service-b:
+	@podman logs -f service-b
+
+
 .PHONY: build
 build: service-a-build service-a-build-envoy service-b-build prometheus-build
 
@@ -40,7 +55,7 @@ service-a-pod-create:
 	@echo "${tgreen}>> creating Service A pod${treset}"
 	@podman pod create --name service-a-pod \
 	   	--label ${PROJECT} \
-		--add-host b.service.local:127.0.0.1 \
+		--add-host b.local.service:127.0.0.1 \
 		--add-host b.service:$(call pod_ip_address,service-b-pod) \
 		--publish ${EXPOSE_SERVICE_A}:80
 
@@ -60,7 +75,7 @@ service-a-build-envoy: service-a/Dockerfile-envoy
 .PHONY: service-a-run-direct
 service-a-run-direct:
 	@echo "${tgreen}>> starting Service A${treset}"
-	@podman run -d --rm --pod service-a-pod \
+	@podman run --name service-a -d --rm --pod service-a-pod \
 		-e SERVICE_HOST=0.0.0.0 \
 		-e SERVICE_PORT=80 \
 		-e UPSTREAM_SERVICE=http://b.service:80 \
@@ -70,13 +85,13 @@ service-a-run-direct:
 .PHONY: service-a-run-envoy
 service-a-run-envoy:
 	@echo "${tgreen}>> starting Service A${treset}"
-	@podman run -d --rm --pod service-a-pod \
+	@podman run --name service-a -d --rm --pod service-a-pod \
 		-e SERVICE_HOST=127.0.0.1 \
 		-e SERVICE_PORT=8000 \
-		-e UPSTREAM_SERVICE=http://b.service.local:9001 \
+		-e UPSTREAM_SERVICE=http://b.local.service:9001 \
 		--label ${PROJECT} ${PROJECT}/service-a
 	@echo "${tgreen}>> starting envoy sidecar${treset}"
-	@podman run -d --pod service-a-pod \
+	@podman run --name service-a-envoy -d --rm --pod service-a-pod \
 		-e ENVOY_UID=0 -e ENVOY_GID=0 \
 		--label ${PROJECT} ${PROJECT}/service-a-envoy
 
@@ -96,7 +111,7 @@ service-b-build: service-b/Dockerfile
 .PHONY: service-b-run
 service-b-run:
 	@echo "${tgreen}>> starting Service B${treset}"
-	@podman run -d --rm --pod service-b-pod \
+	@podman run --name service-b -d --rm --pod service-b-pod \
 		-e ERROR_RATE=${SERVICE_B_ERROR_RATE} \
 		--label ${PROJECT} ${PROJECT}/service-b
 
@@ -110,7 +125,7 @@ prometheus-build: prometheus/Dockerfile
 .PHONY: prometheus-run
 prometheus-run:
 	@echo "${tgreen}>> starting prometheus service${treset}"
-	@podman run -d \
+	@podman run --name envoy-prom -d --rm \
 	   	--label ${PROJECT} \
 		--publish ${EXPOSE_PROMETHEUS}:9090 \
 		--add-host a.service:$(call pod_ip_address,service-a-pod) \
@@ -127,7 +142,7 @@ kill-containers:
 .PHONY: remove-containers
 remove-containers:
 	@echo "${tgreen}>> removing containers${treset}"
-	@podman ps -qa -f label=${PROJECT} | xargs -I % podman rm %
+	@podman ps -qa -f label=${PROJECT} | xargs -I % podman rm -f -i %
 
 
 .PHONY: remove-pods

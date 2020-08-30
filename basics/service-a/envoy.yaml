@@ -1,5 +1,6 @@
 static_resources:
   listeners:
+  # Ingress
   - address:
       socket_address:
         address: 0.0.0.0
@@ -11,20 +12,26 @@ static_resources:
           "@type": type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager
           codec_type: auto
           stat_prefix: ingress_http
+          access_log:
+          - name: envoy.access_loggers.file
+            typed_config:
+              "@type": type.googleapis.com/envoy.config.accesslog.v2.FileAccessLog
+              path: /dev/stdout
           route_config:
             name: ingress_route
             virtual_hosts:
-            - name: service_a
+            - name: local_service
               domains:
               - "*"
               routes:
               - match:
                   prefix: "/"
                 route:
-                  cluster: service_a
+                  cluster: local_service
           http_filters:
           - name: envoy.filters.http.router
             typed_config: {}
+  # Egress
   - address:
       socket_address:
         address: 127.0.0.1
@@ -36,28 +43,37 @@ static_resources:
           "@type": type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager
           codec_type: auto
           stat_prefix: egress_http
+          access_log:
+          - name: envoy.access_loggers.file
+            typed_config:
+              "@type": type.googleapis.com/envoy.config.accesslog.v2.FileAccessLog
+              path: /dev/stdout
           route_config:
             name: egress_route
             virtual_hosts:
-            - name: service_b
+            - name: remote_service_b
               domains:
-              - "b.service.local"
+              - "b.local.service"
+              - "b.local.service:*"
+              retry_policy:
+                retry_on: 5xx
+                num_retries: 2
               routes:
               - match:
                   prefix: "/"
                 route:
-                  cluster: service_b
+                  cluster: remote_service_b
           http_filters:
           - name: envoy.filters.http.router
             typed_config: {}
 
   clusters:
-  - name: service_a
+  - name: local_service
     connect_timeout: 0.25s
     type: strict_dns
     lb_policy: round_robin
     load_assignment:
-      cluster_name: service_a
+      cluster_name: local_service
       endpoints:
       - lb_endpoints:
         - endpoint:
@@ -65,12 +81,12 @@ static_resources:
               socket_address:
                 address: 127.0.0.1
                 port_value: 8000
-  - name: service_b
+  - name: remote_service_b
     connect_timeout: 0.25s
     type: strict_dns
     lb_policy: round_robin
     load_assignment:
-      cluster_name: service_b
+      cluster_name: remote_service_b
       endpoints:
       - lb_endpoints:
         - endpoint:
@@ -80,7 +96,7 @@ static_resources:
                 port_value: 80
 
 admin:
-  access_log_path: "/dev/null"
+  access_log_path: "/dev/stdout"
   address:
     socket_address:
       address: 127.0.0.1

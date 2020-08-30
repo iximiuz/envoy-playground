@@ -28,10 +28,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if rand.Intn(100) >= ERROR_RATE {
 		fmt.Fprintln(w, "Service B: Yay! nounce", rand.Uint32())
 		requestCounter.WithLabelValues("2xx").Inc()
+		log.Println("HTTP 200", r.Method, r.URL, r.RemoteAddr)
 	} else {
 		http.Error(w, fmt.Sprintf("Service B: Ooops... nounce %v", rand.Uint32()),
 			http.StatusInternalServerError)
 		requestCounter.WithLabelValues("5xx").Inc()
+		log.Println("HTTP 500", r.Method, r.URL, r.RemoteAddr)
 	}
 }
 
