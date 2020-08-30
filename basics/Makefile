@@ -22,13 +22,17 @@ run-envoy: service-b-pod-create service-b-run \
 	prometheus-run
 
 
+.PHONY: traffic
+traffic:
+	for _ in {1..1000}; do curl --silent localhost:${EXPOSE_SERVICE_A}; done | sort | uniq -w 24 -c
+
+
 .PHONY: stop
 stop: kill-containers remove-containers remove-pods
 
 
-.PHONY: traffic
-traffic:
-	for _ in {1..1000}; do curl --silent localhost:${EXPOSE_SERVICE_A}; done | sort | uniq -w 24 -c
+.PHONY: clean
+clean: stop remove-images
 
 
 .PHONY: log-service-a
@@ -137,12 +141,13 @@ prometheus-run:
 kill-containers:
 	@echo "${tgreen}>> killing containers${treset}"
 	@podman ps -q -f label=${PROJECT} | xargs -I % podman kill %
+	@sleep 2
 
 
 .PHONY: remove-containers
 remove-containers:
 	@echo "${tgreen}>> removing containers${treset}"
-	@podman ps -qa -f label=${PROJECT} | xargs -I % podman rm -f -i %
+	@podman ps -qa -f label=${PROJECT} | xargs -I % podman rm -fi %
 
 
 .PHONY: remove-pods
@@ -155,8 +160,4 @@ remove-pods:
 remove-images:
 	@echo "${tgreen}>> removing images${treset}"
 	@podman images -q ${PROJECT}/* | xargs -I % podman rmi %
-
-
-.PHONY: clean
-clean: kill-containers remove-pods remove-containers remove-images
 

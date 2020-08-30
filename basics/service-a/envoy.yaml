@@ -99,6 +99,7 @@ admin:
   access_log_path: "/dev/stdout"
   address:
     socket_address:
-      address: 127.0.0.1
-      port_value: 8082
+      # Beware: it's insecure to expose admin interface publicly
+      address: 0.0.0.0
+      port_value: 9901
 

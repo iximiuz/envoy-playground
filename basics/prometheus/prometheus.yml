@@ -4,6 +4,12 @@ scrape_configs:
     static_configs:
       - targets: ['a.service:8081']
 
+  - job_name: service-a-envoy
+    scrape_interval: 1s
+    metrics_path: /stats/prometheus
+    static_configs:
+      - targets: ['a.service:9901']
+
   - job_name: service-b
     scrape_interval: 1s
     static_configs:
