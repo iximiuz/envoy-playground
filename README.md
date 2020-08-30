@@ -8,7 +8,7 @@ All the scenarios have been tested on `CentOS 8` (see the Vagrantfile at the roo
 
 ## Basics
 
-The environment creates two services. The frontend service _A_ call the faulty upstream service _B_. Envoy is used a sidecar to mitigate the erroneous behavior of the upstream service.
+The environment creates two services. The frontend service _A_ call the faulty upstream service _B_. Envoy is used as a sidecar to mitigate the erroneous behavior of the upstream service.
 
 Run it:
 
