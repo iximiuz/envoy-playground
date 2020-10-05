@@ -1,4 +1,4 @@
-# Envoy playground - basics
+# Envoy playground - Basics
 
 Create a basic playground simulating some service-to-service communication scenarious.
 

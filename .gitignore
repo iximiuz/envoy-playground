@@ -1,6 +1,7 @@
 *.swp
 .vagrant
+go.sum
 basics/service-a/service-a
-basics/service-a/go.sum
 basics/service-b/service-b
-basics/service-b/go.sum
+request-hedging/service-a/service-a
+request-hedging/service-b/service-b
